@@ -1,577 +1,564 @@
-<title>Ryra & Co. Sales Dashboard</title>
+<title>Ryra & Co. Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
-
 <style>
-/* ── Design tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --bg:        #f7f6f3;
-  --surface:   #fcfcfb;
-  --surface-2: #f0efeb;
-  --border:    #e1e0d9;
-  --text-1:    #0b0b0b;
-  --text-2:    #52514e;
-  --text-3:    #898781;
-  --amz:       #2a78d6;
-  --myn:       #eb6834;
-  --both:      #1baf7a;
-  --good:      #006300;
-  --warn:      #c98500;
-  --critical:  #d03b3b;
-  --grid:      #e1e0d9;
+  --bg:       #f7f6f3;
+  --surface:  #fcfcfb;
+  --sf2:      #f0efeb;
+  --border:   #e1e0d9;
+  --t1:       #0b0b0b;
+  --t2:       #52514e;
+  --t3:       #898781;
+  --amz:      #2a78d6;
+  --myn:      #eb6834;
+  --both:     #1baf7a;
+  --good:     #006300;
+  --warn:     #c98500;
+  --crit:     #d03b3b;
+  --grid:     #e1e0d9;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg:        #0d0d0d;
-    --surface:   #1a1a19;
-    --surface-2: #242422;
-    --border:    #2c2c2a;
-    --text-1:    #f0efec;
-    --text-2:    #c3c2b7;
-    --text-3:    #898781;
-    --amz:       #3987e5;
-    --myn:       #d95926;
-    --both:      #199e70;
-    --good:      #0ca30c;
-    --warn:      #c98500;
-    --critical:  #e66767;
-    --grid:      #2c2c2a;
+    --bg:#0d0d0d;--surface:#1a1a19;--sf2:#242422;--border:#2c2c2a;
+    --t1:#f0efec;--t2:#c3c2b7;--t3:#898781;
+    --amz:#3987e5;--myn:#d95926;--both:#199e70;
+    --good:#0ca30c;--warn:#c98500;--crit:#e66767;--grid:#2c2c2a;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg:        #0d0d0d;
-  --surface:   #1a1a19;
-  --surface-2: #242422;
-  --border:    #2c2c2a;
-  --text-1:    #f0efec;
-  --text-2:    #c3c2b7;
-  --text-3:    #898781;
-  --amz:       #3987e5;
-  --myn:       #d95926;
-  --both:      #199e70;
-  --good:      #0ca30c;
-  --warn:      #c98500;
-  --critical:  #e66767;
-  --grid:      #2c2c2a;
+  --bg:#0d0d0d;--surface:#1a1a19;--sf2:#242422;--border:#2c2c2a;
+  --t1:#f0efec;--t2:#c3c2b7;--t3:#898781;
+  --amz:#3987e5;--myn:#d95926;--both:#199e70;
+  --good:#0ca30c;--warn:#c98500;--crit:#e66767;--grid:#2c2c2a;
 }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg);color:var(--t1);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 40px}
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 14px;
-  background: var(--bg);
-  color: var(--text-1);
-  padding-left:  max(16px, env(safe-area-inset-left,  0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 0 32px;
-}
+/* header */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--surface);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;padding:14px 0;gap:12px;flex-wrap:wrap}
+.hdr-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;letter-spacing:-.3px}
+.hdr-title span{color:var(--t3);font-weight:500}
+.hdr-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.legend{display:flex;gap:10px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--t2)}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ftabs{display:flex;gap:2px;background:var(--sf2);border-radius:6px;padding:2px}
+.ftab{padding:4px 10px;border-radius:4px;font-size:12px;font-weight:500;color:var(--t3);
+  border:none;background:none;cursor:pointer;transition:background .15s,color .15s}
+.ftab.active{background:var(--surface);color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.badge{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500;
+  background:var(--sf2);color:var(--t3);display:flex;align-items:center;gap:5px}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:var(--t3)}
+.badge.live .dot{background:var(--good)}.badge.live{color:var(--good)}
+.badge.error .dot{background:var(--crit)}.badge.error{color:var(--crit)}
 
-/* ── Header ──────────────────────────────────────────────────────────────────── */
-.header {
-  position: sticky;
-  top: env(safe-area-inset-top, 0px);
-  z-index: 10;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 0; gap: 12px; flex-wrap: wrap;
-}
-.header-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
-.header-title span { color: var(--text-3); font-weight: 500; }
-.header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.legend { display: flex; gap: 10px; }
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-2); }
-.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.filter-tabs { display: flex; gap: 2px; background: var(--surface-2); border-radius: 6px; padding: 2px; }
-.filter-tab {
-  padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;
-  color: var(--text-3); border: none; background: none; cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.filter-tab.active { background: var(--surface); color: var(--text-1); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+/* setup banner */
+.setup{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--amz);
+  border-radius:10px;padding:18px 20px;margin-top:20px;display:none}
+.setup h3{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;margin-bottom:10px}
+.setup p{font-size:13px;color:var(--t2);line-height:1.6}
+.inp-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.inp{flex:1;min-width:200px;padding:8px 12px;border-radius:6px;border:1px solid var(--border);
+  background:var(--sf2);color:var(--t1);font-size:13px;font-family:monospace}
+.inp:focus{outline:2px solid var(--amz);border-color:transparent}
+.btn{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;
+  font-weight:600;background:var(--amz);color:#fff;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn.sec{background:var(--sf2);color:var(--t1);border:1px solid var(--border)}
 
-/* status badge */
-.status-badge {
-  font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500;
-  background: var(--surface-2); color: var(--text-3);
-  display: flex; align-items: center; gap: 5px;
-}
-.status-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); }
-.status-badge.live .dot { background: var(--good); }
-.status-badge.live { color: var(--good); }
-.status-badge.error .dot { background: var(--critical); }
-.status-badge.error { color: var(--critical); }
+/* section label */
+.sec-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;
+  color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-top:28px;margin-bottom:10px}
 
-/* ── Setup banner ────────────────────────────────────────────────────────────── */
-.setup-banner {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--amz);
-  border-radius: 10px;
-  padding: 18px 20px;
-  margin-top: 20px;
-  display: none;
-}
-.setup-banner h3 { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
-.setup-banner p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
-.proxy-input-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.proxy-input {
-  flex: 1; min-width: 200px; padding: 8px 12px; border-radius: 6px;
-  border: 1px solid var(--border); background: var(--surface-2);
-  color: var(--text-1); font-size: 13px; font-family: monospace;
-}
-.proxy-input:focus { outline: 2px solid var(--amz); border-color: transparent; }
-.btn {
-  padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer;
-  font-size: 13px; font-weight: 600; background: var(--amz); color: #fff;
-  transition: opacity 0.15s;
-}
-.btn:hover { opacity: 0.85; }
-.btn.secondary { background: var(--surface-2); color: var(--text-1); border: 1px solid var(--border); }
+/* stat tiles */
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:20px}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:500px){.stats{grid-template-columns:repeat(2,1fr)}}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.tile-label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.tile-val{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;
+  letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.tile-sub{font-size:11px;color:var(--t2);margin-top:3px}
+.shimmer{background:linear-gradient(90deg,var(--sf2) 25%,var(--border) 50%,var(--sf2) 75%);
+  background-size:200% 100%;animation:sh 1.4s infinite;border-radius:4px;height:1em;width:65%}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-/* ── Stat tiles ──────────────────────────────────────────────────────────────── */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px; margin-top: 20px;
-}
-@media (max-width: 700px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 400px) { .stats-row { grid-template-columns: 1fr; } }
-.stat-tile {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 16px;
-}
-.stat-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-.stat-value { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
-.stat-sub { font-size: 11px; color: var(--text-2); margin-top: 4px; }
-.shimmer { background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; height: 1em; width: 70%; }
-@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+/* cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;min-width:0}
+.card-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;margin-bottom:14px}
 
-/* ── Charts ──────────────────────────────────────────────────────────────────── */
-.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-@media (max-width: 680px) { .charts-row { grid-template-columns: 1fr; } }
-.chart-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 18px; min-width: 0;
-}
-.chart-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 14px; }
-.chart-wrap { overflow-x: auto; }
-svg text { font-family: 'Inter', system-ui, sans-serif; fill: var(--text-2); }
+/* 2-col row */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:680px){.row2{grid-template-columns:1fr}}
 
-/* ── SKU table ───────────────────────────────────────────────────────────────── */
-.table-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 18px; margin-top: 12px; overflow-x: auto;
-}
-.table-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 14px; }
-table { width: 100%; border-collapse: collapse; min-width: 580px; font-variant-numeric: tabular-nums; }
-th {
-  text-align: left; font-size: 11px; font-weight: 500; color: var(--text-3);
-  text-transform: uppercase; letter-spacing: 0.05em;
-  padding: 6px 10px 8px; border-bottom: 1px solid var(--border); white-space: nowrap;
-}
-th.r, td.r { text-align: right; }
-td { padding: 9px 10px; font-size: 13px; border-bottom: 1px solid var(--border); }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: var(--surface-2); }
-.sku-code { font-weight: 500; font-size: 12px; color: var(--text-2); font-family: monospace; }
-.channel-pill { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; }
-.ch-amz  { background: rgba(42,120,214,0.12); color: var(--amz); }
-.ch-myn  { background: rgba(235,104,52,0.12);  color: var(--myn); }
-.ch-both { background: rgba(27,175,122,0.12);  color: var(--both); }
-.rr-bar-wrap { display: flex; align-items: center; gap: 6px; }
-.rr-bar { height: 6px; border-radius: 3px; min-width: 2px; }
-.rr-low  { background: var(--good); }
-.rr-mid  { background: var(--warn); }
-.rr-high { background: var(--critical); }
-.rr-val  { font-size: 12px; color: var(--text-2); white-space: nowrap; }
+/* 3-col row */
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:800px){.row3{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.row3{grid-template-columns:1fr}}
+
+/* channel mix pills */
+.mix-wrap{display:flex;flex-direction:column;gap:14px;justify-content:center;height:100%}
+.mix-channel{display:flex;flex-direction:column;gap:6px}
+.mix-top{display:flex;justify-content:space-between;align-items:baseline}
+.mix-name{font-size:13px;font-weight:600}
+.mix-rev{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.mix-bar-bg{height:8px;border-radius:4px;background:var(--sf2)}
+.mix-bar-fill{height:8px;border-radius:4px;transition:width .6s ease}
+.mix-pct{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* ads table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:520px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:11px;font-weight:500;color:var(--t3);text-transform:uppercase;
+  letter-spacing:.05em;padding:5px 10px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+th.r,td.r{text-align:right}
+td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--sf2)}
+
+/* acos pill */
+.acos{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px}
+.acos.good{background:rgba(0,99,0,.1);color:var(--good)}
+.acos.warn{background:rgba(201,133,0,.1);color:var(--warn)}
+.acos.bad{background:rgba(208,59,59,.1);color:var(--crit)}
+
+/* returns table */
+.rr-bar-wrap{display:flex;align-items:center;gap:6px}
+.rr-bar{height:6px;border-radius:3px;min-width:2px}
+.rr-low{background:var(--good)}.rr-mid{background:var(--warn)}.rr-high{background:var(--crit)}
+.rr-val{font-size:12px;color:var(--t2);white-space:nowrap}
+
+/* sku table */
+.ch-pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px}
+.ch-amz{background:rgba(42,120,214,.12);color:var(--amz)}
+.ch-myn{background:rgba(235,104,52,.12);color:var(--myn)}
+.ch-both{background:rgba(27,175,122,.12);color:var(--both)}
+
+/* chart wrap */
+.chart-wrap{overflow-x:auto}
 
 /* tooltip */
-.tooltip {
-  position: fixed; pointer-events: none; z-index: 100;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 7px; padding: 9px 12px;
-  font-size: 12px; color: var(--text-1);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-  line-height: 1.6; transform: translate(-50%,-110%);
-  white-space: nowrap; display: none;
-}
+.tip{position:fixed;pointer-events:none;z-index:100;background:var(--surface);
+  border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-size:12px;
+  color:var(--t1);box-shadow:0 4px 16px rgba(0,0,0,.12);line-height:1.6;
+  transform:translate(-50%,-110%);white-space:nowrap;display:none}
 </style>
 
 <!-- Header -->
-<div class="header">
-  <div class="header-title">Ryra &amp; Co. <span>Sales Intelligence</span></div>
-  <div class="header-right">
+<div class="hdr">
+  <div class="hdr-title">Ryra &amp; Co. <span>Intelligence</span></div>
+  <div class="hdr-right">
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--amz)"></div>Amazon</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--myn)"></div>Myntra</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--amz)"></div>Amazon</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--myn)"></div>Myntra</div>
     </div>
-    <div class="status-badge" id="statusBadge"><span class="dot"></span><span id="statusText">Not connected</span></div>
-    <div class="filter-tabs" id="rangeTabs">
-      <button class="filter-tab" data-range="30">30d</button>
-      <button class="filter-tab active" data-range="45">45d</button>
-      <button class="filter-tab" data-range="60">60d</button>
+    <div class="badge" id="badge"><span class="dot"></span><span id="badgeTxt">Not connected</span></div>
+    <div class="ftabs" id="rangeTabs">
+      <button class="ftab" data-range="30">30d</button>
+      <button class="ftab active" data-range="45">45d</button>
+      <button class="ftab" data-range="60">60d</button>
     </div>
   </div>
 </div>
 
-<!-- Setup banner (shown until proxy URL is saved) -->
-<div class="setup-banner" id="setupBanner">
+<!-- Setup -->
+<div class="setup" id="setup">
   <h3>🔗 Connect to BigQuery</h3>
-  <p>Paste your Google Apps Script Web App URL below to load live data. The URL looks like:<br>
-  <code style="font-size:11px;color:var(--text-3)">https://script.google.com/macros/s/AKfy.../exec</code></p>
-  <div class="proxy-input-row">
-    <input class="proxy-input" id="proxyInput" type="text" placeholder="https://script.google.com/macros/s/.../exec">
-    <button class="btn" id="saveProxy">Connect</button>
-    <button class="btn secondary" id="clearProxy">Reset</button>
+  <p>Paste your Google Apps Script Web App URL to load live data.</p>
+  <div class="inp-row">
+    <input class="inp" id="proxyInp" type="text" placeholder="https://script.google.com/macros/s/.../exec">
+    <button class="btn" id="saveBtn">Connect</button>
+    <button class="btn sec" id="clearBtn">Reset</button>
   </div>
 </div>
 
 <!-- Stats -->
-<div class="stats-row">
-  <div class="stat-tile"><div class="stat-label">Total Revenue</div><div class="stat-value" id="s-rev"><div class="shimmer"></div></div><div class="stat-sub" id="s-rev-sub"></div></div>
-  <div class="stat-tile"><div class="stat-label">Orders</div><div class="stat-value" id="s-ord"><div class="shimmer"></div></div><div class="stat-sub" id="s-ord-sub"></div></div>
-  <div class="stat-tile"><div class="stat-label">Units Sold</div><div class="stat-value" id="s-units"><div class="shimmer"></div></div><div class="stat-sub" id="s-units-sub"></div></div>
-  <div class="stat-tile"><div class="stat-label">Return Rate</div><div class="stat-value" id="s-rr"><div class="shimmer"></div></div><div class="stat-sub" id="s-rr-sub"></div></div>
+<div class="sec-label">Overview</div>
+<div class="stats">
+  <div class="tile"><div class="tile-label">Total Revenue</div><div class="tile-val" id="s-rev"><div class="shimmer"></div></div><div class="tile-sub" id="s-rev-sub"></div></div>
+  <div class="tile"><div class="tile-label">Orders</div><div class="tile-val" id="s-ord"><div class="shimmer"></div></div><div class="tile-sub" id="s-ord-sub"></div></div>
+  <div class="tile"><div class="tile-label">Units Sold</div><div class="tile-val" id="s-units"><div class="shimmer"></div></div><div class="tile-sub" id="s-units-sub"></div></div>
+  <div class="tile"><div class="tile-label">Return Rate</div><div class="tile-val" id="s-rr"><div class="shimmer"></div></div><div class="tile-sub" id="s-rr-sub"></div></div>
+  <div class="tile"><div class="tile-label">Ad Spend</div><div class="tile-val" id="s-spend"><div class="shimmer"></div></div><div class="tile-sub" id="s-spend-sub"></div></div>
+  <div class="tile"><div class="tile-label">Avg ACOS</div><div class="tile-val" id="s-acos"><div class="shimmer"></div></div><div class="tile-sub" id="s-acos-sub"></div></div>
 </div>
 
-<!-- Charts -->
-<div class="charts-row">
-  <div class="chart-card">
-    <div class="chart-title">Daily Revenue — Amazon vs Myntra</div>
+<!-- Revenue + Channel Mix -->
+<div class="sec-label">Revenue</div>
+<div class="row3">
+  <div class="card" style="grid-column:span 2">
+    <div class="card-title">Daily Revenue — Amazon vs Myntra</div>
     <div class="chart-wrap"><svg id="lineChart" height="180" style="width:100%;display:block"></svg></div>
   </div>
-  <div class="chart-card">
-    <div class="chart-title">Top 10 SKUs by Revenue</div>
-    <div class="chart-wrap"><svg id="barChart" height="220" style="width:100%;display:block"></svg></div>
+  <div class="card" id="mixCard">
+    <div class="card-title">Channel Mix</div>
+    <div class="mix-wrap" id="mixWrap">
+      <div class="shimmer" style="height:60px;border-radius:8px"></div>
+    </div>
   </div>
 </div>
 
-<!-- SKU table -->
-<div class="table-card">
-  <h3>SKU Performance — All Channels</h3>
-  <table><thead><tr>
-    <th>SKU</th><th>Channels</th>
-    <th class="r">Orders</th><th class="r">Units</th>
-    <th class="r">Net Revenue</th><th class="r">Avg Price</th>
-    <th>Return Rate</th>
-  </tr></thead>
-  <tbody id="skuBody"></tbody></table>
+<!-- Top SKUs bar -->
+<div class="sec-label">Top SKUs by Revenue</div>
+<div class="card">
+  <div class="chart-wrap"><svg id="barChart" height="220" style="width:100%;display:block"></svg></div>
 </div>
 
-<div class="tooltip" id="tooltip"></div>
+<!-- Ads + Returns -->
+<div class="sec-label">Ads &amp; Returns</div>
+<div class="row2">
+  <div class="card">
+    <div class="card-title">Amazon Campaign Performance</div>
+    <div class="tbl-wrap">
+      <table><thead><tr>
+        <th>Campaign</th><th class="r">Spend</th><th class="r">Orders</th><th class="r">Sales</th><th class="r">ACOS</th><th class="r">ROAS</th>
+      </tr></thead>
+      <tbody id="adsTbody"></tbody></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Top Return Rate SKUs</div>
+    <div class="tbl-wrap">
+      <table><thead><tr>
+        <th>SKU</th><th>Ch</th><th class="r">Orders</th><th class="r">Returned</th><th>Return Rate</th>
+      </tr></thead>
+      <tbody id="retTbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- Full SKU table -->
+<div class="sec-label">All SKU Performance</div>
+<div class="card">
+  <div class="tbl-wrap">
+    <table><thead><tr>
+      <th>SKU</th><th>Ch</th><th class="r">Orders</th><th class="r">Units</th>
+      <th class="r">Net Revenue</th><th class="r">Avg Price</th><th>Return Rate</th>
+    </tr></thead>
+    <tbody id="skuTbody"></tbody></table>
+  </div>
+</div>
+
+<div class="tip" id="tip"></div>
 
 <script>
-// ── Config ────────────────────────────────────────────────────────────────────
-const PROXY_KEY = 'ryra_proxy_url';
-
-let PROXY_URL = '';
+const PROXY_KEY = 'ryra_proxy_v2';
+let PROXY = '';
 let rangeDays = 45;
-let liveData  = null;   // null = not loaded yet
+let D = null; // all fetched data
 
-// ── Storage helpers ───────────────────────────────────────────────────────────
-function loadProxyUrl() {
-  try { return localStorage.getItem(PROXY_KEY) || ''; } catch { return ''; }
-}
-function saveProxyUrl(url) {
-  try { localStorage.setItem(PROXY_KEY, url); } catch {}
-}
+function loadProxy(){ try{ return localStorage.getItem(PROXY_KEY)||''; }catch{ return ''; } }
+function saveProxy(u){ try{ localStorage.setItem(PROXY_KEY,u); }catch{} }
 
-// ── Setup banner ──────────────────────────────────────────────────────────────
-function initSetup() {
-  PROXY_URL = loadProxyUrl();
-  const banner = document.getElementById('setupBanner');
-  const input  = document.getElementById('proxyInput');
-  if (PROXY_URL) {
-    banner.style.display = 'none';
-    input.value = PROXY_URL;
-  } else {
-    banner.style.display = 'block';
-  }
-
-  document.getElementById('saveProxy').addEventListener('click', () => {
-    const val = input.value.trim();
-    if (!val.startsWith('https://script.google.com')) {
-      input.style.outline = '2px solid var(--critical)';
-      return;
-    }
-    input.style.outline = '';
-    PROXY_URL = val;
-    saveProxyUrl(val);
-    banner.style.display = 'none';
-    fetchAll();
-  });
-
-  document.getElementById('clearProxy').addEventListener('click', () => {
-    try { localStorage.removeItem(PROXY_KEY); } catch {}
-    PROXY_URL = '';
-    input.value = '';
-    banner.style.display = 'block';
-    setStatus('idle');
-  });
+function initSetup(){
+  PROXY = loadProxy();
+  const banner = document.getElementById('setup');
+  const inp = document.getElementById('proxyInp');
+  if(PROXY){ banner.style.display='none'; inp.value=PROXY; }
+  else{ banner.style.display='block'; }
+  document.getElementById('saveBtn').onclick = ()=>{
+    const v = inp.value.trim();
+    if(!v.startsWith('https://script.google.com')){ inp.style.outline='2px solid var(--crit)'; return; }
+    inp.style.outline='';
+    PROXY=v; saveProxy(v); banner.style.display='none'; fetchAll();
+  };
+  document.getElementById('clearBtn').onclick = ()=>{
+    try{ localStorage.removeItem(PROXY_KEY); }catch{}
+    PROXY=''; inp.value=''; banner.style.display='block'; setStatus('idle');
+  };
 }
 
-// ── Status badge ──────────────────────────────────────────────────────────────
-function setStatus(state, text) {
-  const badge = document.getElementById('statusBadge');
-  const label = document.getElementById('statusText');
-  badge.className = 'status-badge ' + (state === 'live' ? 'live' : state === 'error' ? 'error' : '');
-  label.textContent = text || (state === 'live' ? 'Live' : state === 'error' ? 'Error' : 'Not connected');
+function setStatus(s, txt){
+  const b=document.getElementById('badge'), t=document.getElementById('badgeTxt');
+  b.className='badge '+(s==='live'?'live':s==='error'?'error':'');
+  t.textContent = txt||(s==='live'?'Live':s==='error'?'Error':'Not connected');
 }
 
-// ── Fetch ─────────────────────────────────────────────────────────────────────
-async function fetchAll() {
-  if (!PROXY_URL) return;
-  setStatus('', 'Loading…');
+async function apiFetch(endpoint, extra){
+  const params = new URLSearchParams({ endpoint, days: rangeDays, ...(extra||{}) });
+  const r = await fetch(PROXY + '?' + params);
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error||'API error');
+  return j.data;
+}
 
-  try {
-    const [daily, skus] = await Promise.all([
-      fetch(`${PROXY_URL}?endpoint=daily&days=${rangeDays}`).then(r => r.json()),
-      fetch(`${PROXY_URL}?endpoint=skus`).then(r => r.json()),
+async function fetchAll(){
+  if(!PROXY) return;
+  setStatus('','Loading…');
+  try{
+    const [daily, skus, ads, mix, returns] = await Promise.all([
+      apiFetch('daily'),
+      apiFetch('skus'),
+      apiFetch('ads'),
+      apiFetch('mix'),
+      apiFetch('returns'),
     ]);
-
-    if (!daily.ok || !skus.ok) throw new Error(daily.error || skus.error || 'Query failed');
-
-    liveData = {
-      daily: daily.data,
-      skus:  skus.data,
-    };
-
-    setStatus('live', 'Live · ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'}));
+    D = { daily, skus, ads, mix, returns };
+    setStatus('live', 'Live · '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
     render();
-
-  } catch (err) {
-    setStatus('error', 'Error — check console');
-    console.error('Dashboard fetch error:', err);
-    // Fall back to static data so the page isn't empty
-    renderStatic();
+  } catch(e){
+    setStatus('error','Error');
+    console.error(e);
   }
 }
 
-// ── Data helpers ──────────────────────────────────────────────────────────────
-function getDailyByChannel() {
-  if (!liveData) return null;
-  // daily rows: {order_date, channel, net_revenue}
-  const map = {};
-  const dates = new Set();
-  liveData.daily.forEach(r => {
-    dates.add(r.order_date);
-    if (!map[r.order_date]) map[r.order_date] = {amz:0, myn:0};
-    if (r.channel === 'Amazon') map[r.order_date].amz += +r.net_revenue;
-    else                        map[r.order_date].myn += +r.net_revenue;
-  });
-  return Array.from(dates).sort().map(d => ({d, ...map[d]}));
-}
-
-function fmt(n) {
-  n = +n;
-  if (n >= 100000) return (n/100000).toFixed(1) + 'L';
-  if (n >= 1000)   return (n/1000).toFixed(1) + 'K';
+// ── helpers ──────────────────────────────────────────────────────────────────
+function fmt(n){
+  n=+n;
+  if(n>=100000) return (n/100000).toFixed(1)+'L';
+  if(n>=1000)   return (n/1000).toFixed(1)+'K';
   return Math.round(n);
 }
-
-// ── Stats ─────────────────────────────────────────────────────────────────────
-function updateStats() {
-  const days = getDailyByChannel();
-  if (!days) return;
-
-  const totalAmz = days.reduce((s,d) => s + d.amz, 0);
-  const totalMyn = days.reduce((s,d) => s + d.myn, 0);
-  const total    = totalAmz + totalMyn;
-
-  const skus   = liveData.skus;
-  const ords   = skus.reduce((s,r) => s + +r.orders,         0);
-  const units  = skus.reduce((s,r) => s + +r.units_sold,     0);
-  const retd   = skus.reduce((s,r) => s + +r.units_returned, 0);
-  const rr     = units ? (retd / units * 100).toFixed(1) : '0.0';
-
-  document.getElementById('s-rev').textContent   = '₹' + fmt(total);
-  document.getElementById('s-rev-sub').innerHTML =
-    `<span style="color:var(--amz)">Amazon ₹${fmt(totalAmz)}</span> · <span style="color:var(--myn)">Myntra ₹${fmt(totalMyn)}</span>`;
-
-  document.getElementById('s-ord').textContent        = ords.toLocaleString('en-IN');
-  document.getElementById('s-ord-sub').textContent    = `${rangeDays}-day window`;
-  document.getElementById('s-units').textContent      = units.toLocaleString('en-IN');
-  document.getElementById('s-units-sub').textContent  = `${skus.length} active SKUs`;
-  document.getElementById('s-rr').textContent         = rr + '%';
-  document.getElementById('s-rr-sub').innerHTML       =
-    `<span style="color:${+rr > 15 ? 'var(--critical)' : 'var(--text-2)'}">${retd} units returned</span>`;
+function chClass(ch){
+  if(!ch) return 'ch-amz';
+  const l=ch.toLowerCase();
+  if(l.includes(',')) return 'ch-both';
+  return l.includes('myntra')?'ch-myn':'ch-amz';
+}
+function chLabel(ch){
+  if(!ch) return 'AMZ';
+  const l=ch.toLowerCase();
+  if(l.includes(',')) return 'Both';
+  return l.includes('myntra')?'MYN':'AMZ';
 }
 
-// ── Line chart ────────────────────────────────────────────────────────────────
-function drawLine() {
-  const days = getDailyByChannel();
-  if (!days || !days.length) return;
+// ── stats ────────────────────────────────────────────────────────────────────
+function updateStats(){
+  // revenue from daily
+  let totalAmz=0, totalMyn=0;
+  D.daily.forEach(r=>{ if(r.channel==='Amazon') totalAmz+=+r.net_revenue; else totalMyn+=+r.net_revenue; });
+  const total=totalAmz+totalMyn;
 
-  const svg = document.getElementById('lineChart');
-  const W   = svg.getBoundingClientRect().width || 400;
-  const H   = 180;
-  const PAD = {t:12, r:12, b:28, l:46};
-  const maxV = Math.max(...days.map(d => d.amz + d.myn), 1);
+  const ords  = D.skus.reduce((s,r)=>s+(+r.orders),0);
+  const units = D.skus.reduce((s,r)=>s+(+r.units_sold),0);
+  const retd  = D.skus.reduce((s,r)=>s+(+r.units_returned),0);
+  const rr    = units?(retd/units*100).toFixed(1):'0.0';
 
-  const xS = i => PAD.l + i / (days.length - 1 || 1) * (W - PAD.l - PAD.r);
-  const yS = v => PAD.t + (1 - v / maxV) * (H - PAD.t - PAD.b);
+  const totalSpend = D.ads.reduce((s,r)=>s+(+r.ad_spend||0),0);
+  const totalSales = D.ads.reduce((s,r)=>s+(+r.sales||0),0);
+  const avgAcos    = totalSales>0?(totalSpend/totalSales*100).toFixed(1):'—';
 
-  const cs   = getComputedStyle(document.documentElement);
-  const grid = cs.getPropertyValue('--grid').trim();
-  const t3   = cs.getPropertyValue('--text-3').trim();
-  const amz  = cs.getPropertyValue('--amz').trim();
-  const myn  = cs.getPropertyValue('--myn').trim();
+  document.getElementById('s-rev').textContent   = '₹'+fmt(total);
+  document.getElementById('s-rev-sub').innerHTML =
+    '<span style="color:var(--amz)">AMZ ₹'+fmt(totalAmz)+'</span> · <span style="color:var(--myn)">MYN ₹'+fmt(totalMyn)+'</span>';
+  document.getElementById('s-ord').textContent        = ords.toLocaleString('en-IN');
+  document.getElementById('s-ord-sub').textContent    = rangeDays+'d window';
+  document.getElementById('s-units').textContent      = units.toLocaleString('en-IN');
+  document.getElementById('s-units-sub').textContent  = D.skus.length+' active SKUs';
+  document.getElementById('s-rr').textContent         = rr+'%';
+  document.getElementById('s-rr-sub').innerHTML       =
+    '<span style="color:'+(+rr>15?'var(--crit)':'var(--t2)')+'">'+retd+' units returned</span>';
+  document.getElementById('s-spend').textContent      = '₹'+fmt(totalSpend);
+  document.getElementById('s-spend-sub').textContent  = D.ads.length+' campaigns';
+  document.getElementById('s-acos').textContent       = avgAcos==='—'?'—':avgAcos+'%';
+  document.getElementById('s-acos-sub').innerHTML     =
+    avgAcos==='—'?'':('<span style="color:'+(+avgAcos<20?'var(--good)':+avgAcos<40?'var(--warn)':'var(--crit)')+'">'+
+    (+avgAcos<20?'Healthy':+avgAcos<40?'Watch':'High')+'</span>');
+}
 
-  let els = '';
+// ── channel mix ──────────────────────────────────────────────────────────────
+function buildMix(){
+  const wrap = document.getElementById('mixWrap');
+  const totalRev = D.mix.reduce((s,r)=>s+(+r.net_revenue),0);
+  const totalOrd = D.mix.reduce((s,r)=>s+(+r.orders),0);
+  wrap.innerHTML = D.mix.map(r=>{
+    const revPct = totalRev>0?(+r.net_revenue/totalRev*100).toFixed(0):0;
+    const color  = r.channel==='Amazon'?'var(--amz)':'var(--myn)';
+    return `<div class="mix-channel">
+      <div class="mix-top">
+        <span class="mix-name" style="color:${color}">${r.channel}</span>
+        <span class="mix-rev">₹${fmt(+r.net_revenue)}</span>
+      </div>
+      <div class="mix-bar-bg"><div class="mix-bar-fill" style="width:${revPct}%;background:${color}"></div></div>
+      <div class="mix-pct">${revPct}% of revenue · ${(+r.orders).toLocaleString('en-IN')} orders</div>
+    </div>`;
+  }).join('');
+}
 
-  for (let i = 0; i <= 4; i++) {
-    const y = PAD.t + i/4 * (H - PAD.t - PAD.b);
-    const v = maxV * (1 - i/4);
-    els += `<line x1="${PAD.l}" y1="${y}" x2="${W-PAD.r}" y2="${y}" stroke="${grid}" stroke-width="1"/>`;
-    els += `<text x="${PAD.l-6}" y="${y+4}" text-anchor="end" font-size="10" fill="${t3}">₹${fmt(v)}</text>`;
+// ── line chart ───────────────────────────────────────────────────────────────
+function drawLine(){
+  const svg=document.getElementById('lineChart');
+  const W=svg.getBoundingClientRect().width||400, H=180;
+  const PAD={t:12,r:12,b:28,l:46};
+
+  const map={}, dates=new Set();
+  D.daily.forEach(r=>{ dates.add(r.order_date); if(!map[r.order_date]) map[r.order_date]={amz:0,myn:0};
+    if(r.channel==='Amazon') map[r.order_date].amz+=+r.net_revenue;
+    else map[r.order_date].myn+=+r.net_revenue; });
+  const days=Array.from(dates).sort().map(d=>({d,...map[d]}));
+  if(!days.length){ svg.innerHTML=''; return; }
+
+  const maxV=Math.max(...days.map(d=>d.amz+d.myn),1);
+  const xS=i=>PAD.l+i/(days.length-1||1)*(W-PAD.l-PAD.r);
+  const yS=v=>PAD.t+(1-v/maxV)*(H-PAD.t-PAD.b);
+  const cs=getComputedStyle(document.documentElement);
+  const grid=cs.getPropertyValue('--grid').trim();
+  const t3=cs.getPropertyValue('--t3').trim();
+  const amz=cs.getPropertyValue('--amz').trim();
+  const myn=cs.getPropertyValue('--myn').trim();
+
+  let els='';
+  for(let i=0;i<=4;i++){
+    const y=PAD.t+i/4*(H-PAD.t-PAD.b), v=maxV*(1-i/4);
+    els+=`<line x1="${PAD.l}" y1="${y}" x2="${W-PAD.r}" y2="${y}" stroke="${grid}" stroke-width="1"/>`;
+    els+=`<text x="${PAD.l-6}" y="${y+4}" text-anchor="end" font-size="10" fill="${t3}">₹${fmt(v)}</text>`;
   }
-
-  days.forEach((d, i) => {
-    if (i % Math.ceil(days.length / 6) !== 0 && i !== days.length - 1) return;
-    els += `<text x="${xS(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="${t3}">${d.d.slice(5).replace('-','/')}</text>`;
+  days.forEach((d,i)=>{
+    if(i%Math.ceil(days.length/6)!==0&&i!==days.length-1) return;
+    els+=`<text x="${xS(i)}" y="${H-6}" text-anchor="middle" font-size="10" fill="${t3}">${d.d.slice(5).replace('-','/')}</text>`;
   });
-
-  const area = (key, color) => {
-    const pts = days.map((d,i) => `${xS(i)},${yS(d[key])}`).join(' ');
-    return `<polygon points="${xS(0)},${yS(0)} ${pts} ${xS(days.length-1)},${yS(0)}" fill="${color}" fill-opacity="0.1"/>`;
+  const area=(key,color)=>{
+    const pts=days.map((d,i)=>`${xS(i)},${yS(d[key])}`).join(' ');
+    return `<polygon points="${xS(0)},${yS(0)} ${pts} ${xS(days.length-1)},${yS(0)}" fill="${color}" fill-opacity=".1"/>`;
   };
-  const line = (key, color) => {
-    const d = days.map((pt,i) => `${i===0?'M':'L'}${xS(i).toFixed(1)},${yS(pt[key]).toFixed(1)}`).join(' ');
+  const line=(key,color)=>{
+    const d=days.map((pt,i)=>`${i===0?'M':'L'}${xS(i).toFixed(1)},${yS(pt[key]).toFixed(1)}`).join(' ');
     return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
   };
+  els+=area('amz',amz)+area('myn',myn)+line('amz',amz)+line('myn',myn);
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML=els;
 
-  els += area('amz', amz) + area('myn', myn) + line('amz', amz) + line('myn', myn);
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = els;
-
-  const tip = document.getElementById('tooltip');
-  svg.addEventListener('mousemove', e => {
-    const rect = svg.getBoundingClientRect();
-    const idx  = Math.round((e.clientX - rect.left - PAD.l) / (W - PAD.l - PAD.r) * (days.length - 1));
-    if (idx < 0 || idx >= days.length) return;
-    const pt = days[idx];
-    tip.style.display = 'block';
-    tip.style.left = e.clientX + 'px';
-    tip.style.top  = e.clientY + 'px';
-    tip.innerHTML = `<b>${pt.d}</b><br><span style="color:var(--amz)">●</span> Amazon ₹${pt.amz.toLocaleString('en-IN',{maximumFractionDigits:0})}<br><span style="color:var(--myn)">●</span> Myntra ₹${pt.myn.toLocaleString('en-IN',{maximumFractionDigits:0})}<br>Total ₹${(pt.amz+pt.myn).toLocaleString('en-IN',{maximumFractionDigits:0})}`;
+  const tip=document.getElementById('tip');
+  svg.addEventListener('mousemove',e=>{
+    const rect=svg.getBoundingClientRect();
+    const idx=Math.round((e.clientX-rect.left-PAD.l)/(W-PAD.l-PAD.r)*(days.length-1));
+    if(idx<0||idx>=days.length) return;
+    const pt=days[idx];
+    tip.style.display='block'; tip.style.left=e.clientX+'px'; tip.style.top=e.clientY+'px';
+    tip.innerHTML=`<b>${pt.d}</b><br><span style="color:var(--amz)">●</span> Amazon ₹${pt.amz.toLocaleString('en-IN',{maximumFractionDigits:0})}<br><span style="color:var(--myn)">●</span> Myntra ₹${pt.myn.toLocaleString('en-IN',{maximumFractionDigits:0})}<br>Total ₹${(pt.amz+pt.myn).toLocaleString('en-IN',{maximumFractionDigits:0})}`;
   });
-  svg.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  svg.addEventListener('mouseleave',()=>{ tip.style.display='none'; });
 }
 
-// ── Bar chart ─────────────────────────────────────────────────────────────────
-function drawBar() {
-  if (!liveData) return;
-  const top10 = liveData.skus.slice(0, 10);
-  const svg   = document.getElementById('barChart');
-  const W     = svg.getBoundingClientRect().width || 320;
-  const H     = 220;
-  const PAD   = {t:10, r:10, b:16, l:90};
-  const maxV  = +top10[0].net_revenue;
-
-  const cs   = getComputedStyle(document.documentElement);
-  const grid = cs.getPropertyValue('--grid').trim();
-  const t3   = cs.getPropertyValue('--text-3').trim();
-  const amz  = cs.getPropertyValue('--amz').trim();
-  const myn  = cs.getPropertyValue('--myn').trim();
-  const both = cs.getPropertyValue('--both').trim();
-
-  const barH = (H - PAD.t - PAD.b) / top10.length - 4;
-  let els = '';
-
-  [0, 0.25, 0.5, 0.75, 1].forEach(f => {
-    const x = PAD.l + f * (W - PAD.l - PAD.r);
-    els += `<line x1="${x}" y1="${PAD.t}" x2="${x}" y2="${H-PAD.b}" stroke="${grid}" stroke-width="1"/>`;
+// ── bar chart ────────────────────────────────────────────────────────────────
+function drawBar(){
+  const top10=D.skus.slice(0,10);
+  const svg=document.getElementById('barChart');
+  const W=svg.getBoundingClientRect().width||400, H=220;
+  const PAD={t:10,r:10,b:16,l:100};
+  const maxV=+top10[0].net_revenue||1;
+  const cs=getComputedStyle(document.documentElement);
+  const grid=cs.getPropertyValue('--grid').trim();
+  const t3=cs.getPropertyValue('--t3').trim();
+  const amz=cs.getPropertyValue('--amz').trim();
+  const myn=cs.getPropertyValue('--myn').trim();
+  const both=cs.getPropertyValue('--both').trim();
+  const barH=(H-PAD.t-PAD.b)/top10.length-4;
+  let els='';
+  [0,.25,.5,.75,1].forEach(f=>{
+    const x=PAD.l+f*(W-PAD.l-PAD.r);
+    els+=`<line x1="${x}" y1="${PAD.t}" x2="${x}" y2="${H-PAD.b}" stroke="${grid}" stroke-width="1"/>`;
   });
-
-  top10.forEach((r, i) => {
-    const y     = PAD.t + i * ((H - PAD.t - PAD.b) / top10.length);
-    const bw    = Math.max(2, (+r.net_revenue / maxV) * (W - PAD.l - PAD.r));
-    const ch    = (r.channels || '').includes(',') ? 'both' : (r.channels || '').toLowerCase().includes('myntra') ? 'myn' : 'amz';
-    const color = ch === 'amz' ? amz : ch === 'myn' ? myn : both;
-    const label = r.sku.length > 10 ? r.sku.slice(0,10) + '…' : r.sku;
-
-    els += `<text x="${PAD.l-6}" y="${y+barH/2+4}" text-anchor="end" font-size="11" fill="${t3}">${label}</text>`;
-    els += `<rect x="${PAD.l}" y="${y+2}" width="${bw}" height="${barH}" rx="3" fill="${color}" fill-opacity="0.85"/>`;
-    if (bw > 36) {
-      els += `<text x="${PAD.l+bw-6}" y="${y+barH/2+4}" text-anchor="end" font-size="10" fill="white" font-weight="600">₹${fmt(+r.net_revenue)}</text>`;
-    }
+  top10.forEach((r,i)=>{
+    const y=PAD.t+i*((H-PAD.t-PAD.b)/top10.length);
+    const bw=Math.max(2,(+r.net_revenue/maxV)*(W-PAD.l-PAD.r));
+    const ch=r.channels&&r.channels.includes(',')?'both':(r.channels||'').toLowerCase().includes('myntra')?'myn':'amz';
+    const color=ch==='amz'?amz:ch==='myn'?myn:both;
+    const label=r.sku.length>12?r.sku.slice(0,12)+'…':r.sku;
+    els+=`<text x="${PAD.l-6}" y="${y+barH/2+4}" text-anchor="end" font-size="11" fill="${t3}">${label}</text>`;
+    els+=`<rect x="${PAD.l}" y="${y+2}" width="${bw}" height="${barH}" rx="3" fill="${color}" fill-opacity=".85"/>`;
+    if(bw>40) els+=`<text x="${PAD.l+bw-6}" y="${y+barH/2+4}" text-anchor="end" font-size="10" fill="white" font-weight="600">₹${fmt(+r.net_revenue)}</text>`;
   });
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML=els;
 
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = els;
-
-  const tip = document.getElementById('tooltip');
-  svg.addEventListener('mousemove', e => {
-    const rect = svg.getBoundingClientRect();
-    const idx  = Math.floor((e.clientY - rect.top - PAD.t) / ((H - PAD.t - PAD.b) / top10.length));
-    if (idx < 0 || idx >= top10.length) { tip.style.display = 'none'; return; }
-    const r = top10[idx];
-    tip.style.display = 'block';
-    tip.style.left = e.clientX + 'px';
-    tip.style.top  = e.clientY + 'px';
-    tip.innerHTML = `<b>${r.sku}</b><br>Revenue ₹${(+r.net_revenue).toLocaleString('en-IN')}<br>Orders ${r.orders} · Units ${r.units_sold}<br>Return rate ${r.return_rate_pct || 0}%`;
+  const tip=document.getElementById('tip');
+  svg.addEventListener('mousemove',e=>{
+    const rect=svg.getBoundingClientRect();
+    const idx=Math.floor((e.clientY-rect.top-PAD.t)/((H-PAD.t-PAD.b)/top10.length));
+    if(idx<0||idx>=top10.length){ tip.style.display='none'; return; }
+    const r=top10[idx];
+    tip.style.display='block'; tip.style.left=e.clientX+'px'; tip.style.top=e.clientY+'px';
+    tip.innerHTML=`<b>${r.sku}</b><br>Revenue ₹${(+r.net_revenue).toLocaleString('en-IN')}<br>Orders ${r.orders} · Units ${r.units_sold}<br>Return rate ${r.return_rate_pct||0}%`;
   });
-  svg.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  svg.addEventListener('mouseleave',()=>{ tip.style.display='none'; });
 }
 
-// ── SKU table ─────────────────────────────────────────────────────────────────
-function buildTable() {
-  if (!liveData) return;
-  const body = document.getElementById('skuBody');
-  body.innerHTML = liveData.skus.map(r => {
-    const rr  = +(r.return_rate_pct || 0);
-    const rrClass = rr === 0 ? 'rr-low' : rr < 15 ? 'rr-mid' : 'rr-high';
-    const rrW = Math.min(60, rr / 70 * 60);
-    const ch  = (r.channels || '').includes(',') ? 'both' : (r.channels || '').toLowerCase().includes('myntra') ? 'myn' : 'amz';
-    const chLabel = ch === 'amz' ? 'Amazon' : ch === 'myn' ? 'Myntra' : 'Both';
+// ── ads table ────────────────────────────────────────────────────────────────
+function buildAds(){
+  const tbody=document.getElementById('adsTbody');
+  if(!D.ads.length){ tbody.innerHTML='<tr><td colspan="6" style="color:var(--t3);text-align:center;padding:20px">No ads data</td></tr>'; return; }
+  tbody.innerHTML=D.ads.slice(0,10).map(r=>{
+    const acos=+(r.acos_pct||0);
+    const acosClass=acos===0?'':'acos '+(acos<20?'good':acos<40?'warn':'bad');
+    const acosLabel=acos===0?'—':acos.toFixed(1)+'%';
+    const name=r.campaign_name&&r.campaign_name.length>28?r.campaign_name.slice(0,28)+'…':(r.campaign_name||'—');
     return `<tr>
-      <td class="sku-code">${r.sku}</td>
-      <td><span class="channel-pill ch-${ch}">${chLabel}</span></td>
-      <td class="r">${(+r.orders).toLocaleString('en-IN')}</td>
-      <td class="r">${(+r.units_sold).toLocaleString('en-IN')}</td>
-      <td class="r">₹${(+r.net_revenue).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
-      <td class="r">₹${(+(r.avg_selling_price||0)).toFixed(0)}</td>
-      <td><div class="rr-bar-wrap"><div class="rr-bar ${rrClass}" style="width:${rrW}px"></div><span class="rr-val">${rr===0?'—':rr+'%'}</span></div></td>
+      <td title="${r.campaign_name||''}">${name}</td>
+      <td class="r">₹${fmt(+r.ad_spend||0)}</td>
+      <td class="r">${r.purchases||0}</td>
+      <td class="r">₹${fmt(+r.sales||0)}</td>
+      <td class="r"><span class="${acosClass}">${acosLabel}</span></td>
+      <td class="r">${r.roas?(+r.roas).toFixed(1)+'x':'—'}</td>
     </tr>`;
   }).join('');
 }
 
-// ── Fallback static render (when proxy not set) ───────────────────────────────
-function renderStatic() {
-  // Keep the shimmer / empty state — user needs to connect first
-  document.getElementById('s-rev').textContent   = '—';
-  document.getElementById('s-ord').textContent   = '—';
-  document.getElementById('s-units').textContent = '—';
-  document.getElementById('s-rr').textContent    = '—';
+// ── returns table ────────────────────────────────────────────────────────────
+function buildReturns(){
+  const tbody=document.getElementById('retTbody');
+  if(!D.returns.length){ tbody.innerHTML='<tr><td colspan="5" style="color:var(--t3);text-align:center;padding:20px">No returns data</td></tr>'; return; }
+  tbody.innerHTML=D.returns.map(r=>{
+    const rr=+(r.return_rate_pct||0);
+    const rrClass=rr<10?'rr-low':rr<20?'rr-mid':'rr-high';
+    const rrW=Math.min(60,rr/50*60);
+    return `<tr>
+      <td style="font-family:monospace;font-size:12px">${r.sku}</td>
+      <td><span class="ch-pill ${chClass(r.channels)}">${chLabel(r.channels)}</span></td>
+      <td class="r">${r.orders}</td>
+      <td class="r">${r.units_returned}</td>
+      <td><div class="rr-bar-wrap"><div class="rr-bar ${rrClass}" style="width:${rrW}px"></div><span class="rr-val">${rr.toFixed(1)}%</span></div></td>
+    </tr>`;
+  }).join('');
 }
 
-// ── Main render ───────────────────────────────────────────────────────────────
-function render() {
+// ── sku table ────────────────────────────────────────────────────────────────
+function buildSku(){
+  const tbody=document.getElementById('skuTbody');
+  tbody.innerHTML=D.skus.map(r=>{
+    const rr=+(r.return_rate_pct||0);
+    const rrClass=rr===0?'rr-low':rr<15?'rr-mid':'rr-high';
+    const rrW=Math.min(60,rr/70*60);
+    return `<tr>
+      <td style="font-family:monospace;font-size:12px;font-weight:500">${r.sku}</td>
+      <td><span class="ch-pill ${chClass(r.channels)}">${chLabel(r.channels)}</span></td>
+      <td class="r">${(+r.orders).toLocaleString('en-IN')}</td>
+      <td class="r">${(+r.units_sold).toLocaleString('en-IN')}</td>
+      <td class="r">₹${(+r.net_revenue).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+      <td class="r">₹${(+(r.avg_selling_price||0)).toFixed(0)}</td>
+      <td><div class="rr-bar-wrap"><div class="rr-bar ${rrClass}" style="width:${rrW}px"></div><span class="rr-val">${rr===0?'—':rr.toFixed(1)+'%'}</span></div></td>
+    </tr>`;
+  }).join('');
+}
+
+function render(){
   updateStats();
+  buildMix();
   drawLine();
   drawBar();
-  buildTable();
+  buildAds();
+  buildReturns();
+  buildSku();
 }
 
-// ── Range filter ──────────────────────────────────────────────────────────────
-document.getElementById('rangeTabs').addEventListener('click', e => {
-  if (!e.target.dataset.range) return;
-  rangeDays = +e.target.dataset.range;
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+document.getElementById('rangeTabs').addEventListener('click',e=>{
+  if(!e.target.dataset.range) return;
+  rangeDays=+e.target.dataset.range;
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
   e.target.classList.add('active');
-  if (PROXY_URL) fetchAll(); // re-fetch with new range
+  if(PROXY) fetchAll();
 });
+window.addEventListener('resize',()=>{ if(D){ drawLine(); drawBar(); } });
 
-window.addEventListener('resize', () => { drawLine(); drawBar(); });
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
 initSetup();
-if (PROXY_URL) {
-  fetchAll();
-} else {
-  renderStatic();
-}
+if(PROXY) fetchAll();
 </script>
