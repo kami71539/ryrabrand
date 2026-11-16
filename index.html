@@ -136,6 +136,10 @@ tr:hover td{background:var(--sf2)}
 .rr-low{background:var(--good)}.rr-mid{background:var(--warn)}.rr-high{background:var(--crit)}
 .rr-val{font-size:12px;color:var(--t2);white-space:nowrap}
 
+/* scrollable date tables */
+.dtbl-wrap{overflow-y:auto;max-height:360px}
+.dtbl-wrap table{min-width:480px}
+
 /* sku table */
 .ch-pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px}
 .ch-amz{background:rgba(42,120,214,.12);color:var(--amz)}
@@ -165,6 +169,9 @@ tr:hover td{background:var(--sf2)}
       <button class="ftab" data-range="30">30d</button>
       <button class="ftab active" data-range="45">45d</button>
       <button class="ftab" data-range="60">60d</button>
+      <button class="ftab" data-range="90">90d</button>
+      <button class="ftab" data-range="180">6mo</button>
+      <button class="ftab" data-range="365">1yr</button>
     </div>
   </div>
 </div>
@@ -235,6 +242,38 @@ tr:hover td{background:var(--sf2)}
   </div>
 </div>
 
+<!-- Daily breakdown tables -->
+<div class="sec-label">Daily Breakdown</div>
+<div class="row3">
+  <div class="card" style="grid-column:span 2">
+    <div class="card-title">Campaigns — Daily</div>
+    <div class="tbl-wrap dtbl-wrap">
+      <table><thead><tr>
+        <th>Date</th><th>Campaign</th><th class="r">Spend</th><th class="r">Clicks</th><th class="r">Orders</th><th class="r">ACOS</th>
+      </tr></thead>
+      <tbody id="dailyCampTbody"></tbody></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Returns — Daily</div>
+    <div class="tbl-wrap dtbl-wrap">
+      <table><thead><tr>
+        <th>Date</th><th class="r">Returns</th><th class="r">Refunded</th>
+      </tr></thead>
+      <tbody id="dailyRetTbody"></tbody></table>
+    </div>
+  </div>
+</div>
+<div class="sec-label" style="margin-top:16px">Orders — Daily</div>
+<div class="card">
+  <div class="tbl-wrap dtbl-wrap">
+    <table><thead><tr>
+      <th>Date</th><th>Channel</th><th class="r">Orders</th><th class="r">Units</th><th class="r">Net Revenue</th>
+    </tr></thead>
+    <tbody id="dailyOrdTbody"></tbody></table>
+  </div>
+</div>
+
 <!-- Full SKU table -->
 <div class="sec-label">All SKU Performance</div>
 <div class="card">
@@ -294,14 +333,17 @@ async function fetchAll(){
   if(!PROXY) return;
   setStatus('','Loading…');
   try{
-    const [daily, skus, ads, mix, returns] = await Promise.all([
+    const [daily, skus, ads, mix, returns, dailyCamps, dailyOrders, dailyReturns] = await Promise.all([
       apiFetch('daily'),
       apiFetch('skus'),
       apiFetch('ads'),
       apiFetch('mix'),
       apiFetch('returns'),
+      apiFetch('daily_camps'),
+      apiFetch('daily_orders'),
+      apiFetch('daily_returns'),
     ]);
-    D = { daily, skus, ads, mix, returns };
+    D = { daily, skus, ads, mix, returns, dailyCamps, dailyOrders, dailyReturns };
     setStatus('live', 'Live · '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
     render();
   } catch(e){
@@ -521,6 +563,64 @@ function buildReturns(){
   }).join('');
 }
 
+// ── daily campaigns table ────────────────────────────────────────────────────
+function buildDailyCamps(){
+  const tbody=document.getElementById('dailyCampTbody');
+  if(!D.dailyCamps||!D.dailyCamps.length){
+    tbody.innerHTML='<tr><td colspan="6" style="color:var(--t3);text-align:center;padding:20px">No data</td></tr>'; return;
+  }
+  tbody.innerHTML=D.dailyCamps.map(r=>{
+    const acos=+(r.acos_pct||0);
+    const acosClass=acos===0?'':'acos '+(acos<20?'good':acos<40?'warn':'bad');
+    const acosLabel=acos===0?'—':acos.toFixed(1)+'%';
+    const name=r.campaign_name&&r.campaign_name.length>22?r.campaign_name.slice(0,22)+'…':(r.campaign_name||'—');
+    const date=r.report_date?r.report_date.slice(5).replace('-','/'):'—';
+    return `<tr>
+      <td style="color:var(--t3);white-space:nowrap">${date}</td>
+      <td title="${r.campaign_name||''}">${name}</td>
+      <td class="r">₹${fmt(+r.ad_spend||0)}</td>
+      <td class="r">${r.clicks||0}</td>
+      <td class="r">${r.purchases||0}</td>
+      <td class="r"><span class="${acosClass}">${acosLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── daily orders table ───────────────────────────────────────────────────────
+function buildDailyOrders(){
+  const tbody=document.getElementById('dailyOrdTbody');
+  if(!D.dailyOrders||!D.dailyOrders.length){
+    tbody.innerHTML='<tr><td colspan="5" style="color:var(--t3);text-align:center;padding:20px">No data</td></tr>'; return;
+  }
+  tbody.innerHTML=D.dailyOrders.map(r=>{
+    const date=r.order_date?r.order_date.slice(5).replace('-','/'):'—';
+    const color=r.channel==='Amazon'?'var(--amz)':'var(--myn)';
+    return `<tr>
+      <td style="color:var(--t3);white-space:nowrap">${date}</td>
+      <td><span style="color:${color};font-weight:600">${r.channel}</span></td>
+      <td class="r">${(+r.orders).toLocaleString('en-IN')}</td>
+      <td class="r">${(+r.units_sold).toLocaleString('en-IN')}</td>
+      <td class="r">₹${(+r.net_revenue).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── daily returns table ──────────────────────────────────────────────────────
+function buildDailyReturns(){
+  const tbody=document.getElementById('dailyRetTbody');
+  if(!D.dailyReturns||!D.dailyReturns.length){
+    tbody.innerHTML='<tr><td colspan="3" style="color:var(--t3);text-align:center;padding:20px">No data</td></tr>'; return;
+  }
+  tbody.innerHTML=D.dailyReturns.map(r=>{
+    const date=r.return_date?String(r.return_date).slice(5).replace('-','/'):'—';
+    return `<tr>
+      <td style="color:var(--t3);white-space:nowrap">${date}</td>
+      <td class="r">${r.returns||0}</td>
+      <td class="r">₹${fmt(+r.refunded_amount||0)}</td>
+    </tr>`;
+  }).join('');
+}
+
 // ── sku table ────────────────────────────────────────────────────────────────
 function buildSku(){
   const tbody=document.getElementById('skuTbody');
@@ -547,6 +647,9 @@ function render(){
   drawBar();
   buildAds();
   buildReturns();
+  buildDailyCamps();
+  buildDailyOrders();
+  buildDailyReturns();
   buildSku();
 }
 
