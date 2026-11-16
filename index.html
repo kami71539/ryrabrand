@@ -86,7 +86,7 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg
 .tile-label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
 .tile-val{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;
   letter-spacing:-.5px;font-variant-numeric:tabular-nums}
-.tile-sub{font-size:11px;color:var(--t2);margin-top:3px}
+.tile-sub{font-size:12px;color:var(--t2);margin-top:4px;font-weight:500}
 .shimmer{background:linear-gradient(90deg,var(--sf2) 25%,var(--border) 50%,var(--sf2) 75%);
   background-size:200% 100%;animation:sh 1.4s infinite;border-radius:4px;height:1em;width:65%}
 @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -374,13 +374,24 @@ function chLabel(ch){
 
 // ── stats ────────────────────────────────────────────────────────────────────
 function updateStats(){
-  // revenue from daily
+  // revenue from daily (already per-channel, no double-count risk)
   let totalAmz=0, totalMyn=0;
   D.daily.forEach(r=>{ if(r.channel==='Amazon') totalAmz+=+r.net_revenue; else totalMyn+=+r.net_revenue; });
   const total=totalAmz+totalMyn;
 
-  const ords  = D.skus.reduce((s,r)=>s+(+r.orders),0);
+  // orders & units from mix (uses COUNT DISTINCT order_id — no SKU double-counting)
+  let ordsAmz=0, ordsMyn=0, unitsAmz=0, unitsMyn=0;
+  D.mix.forEach(r=>{
+    if(r.channel==='Amazon'){ ordsAmz+=+r.orders; unitsAmz+=(+r.units_sold||+r.orders); }
+    else { ordsMyn+=+r.orders; unitsMyn+=(+r.units_sold||+r.orders); }
+  });
+  const ords  = ordsAmz + ordsMyn;
+
+  // units from skus (sum of units_sold per sku — OK for units, just not for distinct orders)
   const units = D.skus.reduce((s,r)=>s+(+r.units_sold),0);
+  const unitsAmzSku = D.skus.filter(r=>r.channels&&r.channels.includes('Amazon')).reduce((s,r)=>s+(+r.units_sold),0);
+  const unitsMynSku = D.skus.filter(r=>r.channels&&r.channels.includes('Myntra')).reduce((s,r)=>s+(+r.units_sold),0);
+
   const retd  = D.skus.reduce((s,r)=>s+(+r.units_returned),0);
   const rr    = units?(retd/units*100).toFixed(1):'0.0';
 
@@ -391,17 +402,19 @@ function updateStats(){
   document.getElementById('s-rev').textContent   = '₹'+fmt(total);
   document.getElementById('s-rev-sub').innerHTML =
     '<span style="color:var(--amz)">AMZ ₹'+fmt(totalAmz)+'</span> · <span style="color:var(--myn)">MYN ₹'+fmt(totalMyn)+'</span>';
-  document.getElementById('s-ord').textContent        = ords.toLocaleString('en-IN');
-  document.getElementById('s-ord-sub').textContent    = rangeDays+'d window';
-  document.getElementById('s-units').textContent      = units.toLocaleString('en-IN');
-  document.getElementById('s-units-sub').textContent  = D.skus.length+' active SKUs';
-  document.getElementById('s-rr').textContent         = rr+'%';
-  document.getElementById('s-rr-sub').innerHTML       =
+  document.getElementById('s-ord').textContent   = ords.toLocaleString('en-IN');
+  document.getElementById('s-ord-sub').innerHTML =
+    '<span style="color:var(--amz)">AMZ '+ordsAmz.toLocaleString('en-IN')+'</span> · <span style="color:var(--myn)">MYN '+ordsMyn.toLocaleString('en-IN')+'</span>';
+  document.getElementById('s-units').textContent = units.toLocaleString('en-IN');
+  document.getElementById('s-units-sub').innerHTML =
+    '<span style="color:var(--amz)">AMZ '+unitsAmzSku.toLocaleString('en-IN')+'</span> · <span style="color:var(--myn)">MYN '+unitsMynSku.toLocaleString('en-IN')+'</span>';
+  document.getElementById('s-rr').textContent    = rr+'%';
+  document.getElementById('s-rr-sub').innerHTML  =
     '<span style="color:'+(+rr>15?'var(--crit)':'var(--t2)')+'">'+retd+' units returned</span>';
-  document.getElementById('s-spend').textContent      = '₹'+fmt(totalSpend);
-  document.getElementById('s-spend-sub').textContent  = D.ads.length+' campaigns';
-  document.getElementById('s-acos').textContent       = avgAcos==='—'?'—':avgAcos+'%';
-  document.getElementById('s-acos-sub').innerHTML     =
+  document.getElementById('s-spend').textContent = '₹'+fmt(totalSpend);
+  document.getElementById('s-spend-sub').textContent = D.ads.length+' campaigns';
+  document.getElementById('s-acos').textContent  = avgAcos==='—'?'—':avgAcos+'%';
+  document.getElementById('s-acos-sub').innerHTML =
     avgAcos==='—'?'':('<span style="color:'+(+avgAcos<20?'var(--good)':+avgAcos<40?'var(--warn)':'var(--crit)')+'">'+
     (+avgAcos<20?'Healthy':+avgAcos<40?'Watch':'High')+'</span>');
 }
