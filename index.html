@@ -387,10 +387,8 @@ function updateStats(){
   });
   const ords  = ordsAmz + ordsMyn;
 
-  // units from skus (sum of units_sold per sku — OK for units, just not for distinct orders)
-  const units = D.skus.reduce((s,r)=>s+(+r.units_sold),0);
-  const unitsAmzSku = D.skus.filter(r=>r.channels&&r.channels.includes('Amazon')).reduce((s,r)=>s+(+r.units_sold),0);
-  const unitsMynSku = D.skus.filter(r=>r.channels&&r.channels.includes('Myntra')).reduce((s,r)=>s+(+r.units_sold),0);
+  // units from mix (channel_orders grouped by channel — no cross-channel double counting)
+  const units = unitsAmz + unitsMyn;
 
   const retd  = D.skus.reduce((s,r)=>s+(+r.units_returned),0);
   const rr    = units?(retd/units*100).toFixed(1):'0.0';
@@ -407,7 +405,7 @@ function updateStats(){
     '<span style="color:var(--amz)">AMZ '+ordsAmz.toLocaleString('en-IN')+'</span> · <span style="color:var(--myn)">MYN '+ordsMyn.toLocaleString('en-IN')+'</span>';
   document.getElementById('s-units').textContent = units.toLocaleString('en-IN');
   document.getElementById('s-units-sub').innerHTML =
-    '<span style="color:var(--amz)">AMZ '+unitsAmzSku.toLocaleString('en-IN')+'</span> · <span style="color:var(--myn)">MYN '+unitsMynSku.toLocaleString('en-IN')+'</span>';
+    '<span style="color:var(--amz)">AMZ '+unitsAmz.toLocaleString('en-IN')+'</span> · <span style="color:var(--myn)">MYN '+unitsMyn.toLocaleString('en-IN')+'</span>';
   document.getElementById('s-rr').textContent    = rr+'%';
   document.getElementById('s-rr-sub').innerHTML  =
     '<span style="color:'+(+rr>15?'var(--crit)':'var(--t2)')+'">'+retd+' units returned</span>';
